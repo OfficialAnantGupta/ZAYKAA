@@ -1,0 +1,40 @@
+import Link from 'next/link'
+import { notFound } from 'next/navigation'
+import { ArrowLeft, ArrowRight, Leaf, MapPin, ShieldCheck, UtensilsCrossed } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
+
+type MenuItem = { id: string; name: string; description: string | null; category: string | null; price_paise: number; image_url: string | null; is_vegetarian: boolean | null; is_featured: boolean | null; dietary_status: string | null }
+
+export default async function RestaurantMenuPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
+  const supabase = await createClient()
+  const { data: restaurant } = await supabase.from('restaurants')
+    .select('id,name,slug,description,city,cuisines,logo_url,cover_image_url,min_order_value_paise,delivery_time_min_minutes,delivery_time_max_minutes,is_active,is_verified,is_demo')
+    .eq('slug', slug).maybeSingle()
+  if (!restaurant || !restaurant.is_active || !restaurant.is_verified || restaurant.is_demo) notFound()
+
+  const { data: menuData, error } = await supabase.from('menu_items')
+    .select('id,name,description,category,price_paise,image_url,is_vegetarian,is_featured,dietary_status')
+    .eq('restaurant_id', restaurant.id).eq('is_available', true).order('sort_order', { ascending: true })
+  const items = (menuData ?? []) as MenuItem[]
+  const grouped = items.reduce<Record<string, MenuItem[]>>((acc, item) => {
+    const category = item.category?.trim() || 'From the kitchen'
+    ;(acc[category] ??= []).push(item)
+    return acc
+  }, {})
+  const money = (paise: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(paise / 100)
+
+  return (
+    <main className="menu-page">
+      <header className="menu-header"><Link href="/discover" className="menu-back"><ArrowLeft size={15} /> All kitchens</Link><Link className="wordmark" href="/"><span className="brand-mark"><UtensilsCrossed size={18} /></span><span>ZAYKAA<small>THE ART OF GOOD TASTE</small></span></Link><Link className="menu-signin" href="/login">Sign in <ArrowRight size={14} /></Link></header>
+      <section className="menu-hero"><div className="menu-hero-art" style={restaurant.cover_image_url ? { backgroundImage: `linear-gradient(90deg,rgba(58,46,37,.68),rgba(58,46,37,.08)),url("${restaurant.cover_image_url}")` } : undefined}><div className="menu-hero-copy"><div className="menu-verified"><ShieldCheck size={14} /> VERIFIED KITCHEN</div><h1 className="serif">{restaurant.name}</h1><p>{restaurant.description || (restaurant.cuisines ?? []).join(' · ') || 'A thoughtful menu, made fresh.'}</p><div className="menu-hero-meta">{restaurant.city && <span><MapPin size={14} /> {restaurant.city}</span>}{restaurant.delivery_time_min_minutes && restaurant.delivery_time_max_minutes && <span>{restaurant.delivery_time_min_minutes}–{restaurant.delivery_time_max_minutes} min</span>}{restaurant.min_order_value_paise != null && <span>Minimum {money(restaurant.min_order_value_paise)}</span>}</div></div></div></section>
+      <section className="menu-content"><div className="menu-section-title"><div className="eyebrow">MADE WITH INTENTION</div><h2 className="serif">The menu.</h2><p>Choose something lovely. Sign in to continue when you're ready to order.</p></div>
+        {error ? <div className="menu-empty">The menu is temporarily unavailable. Please try again shortly.</div> : !items.length ? <div className="menu-empty">This kitchen is preparing its menu. Please check back soon.</div> : Object.entries(grouped).map(([category, categoryItems]) => <section className="menu-category" key={category}><h3 className="serif">{category}</h3><div className="menu-items">{categoryItems.map((item) => <article className="menu-item" key={item.id}><div className="menu-item-copy">{item.is_featured && <span className="menu-featured">A FAVOURITE</span>}<h4>{item.name}</h4><p>{item.description || 'Prepared fresh by the kitchen.'}</p><div className="menu-item-bottom">{item.is_vegetarian && <span className="menu-veg"><Leaf size={12} /> Vegetarian</span>}{item.dietary_status && item.dietary_status.toLowerCase() !== 'regular' && <span>{item.dietary_status}</span>}</div><strong>{money(item.price_paise)}</strong></div><div className="menu-item-image" style={item.image_url ? { backgroundImage: `url("${item.image_url}")` } : undefined} aria-label={item.image_url ? `${item.name} photograph` : 'Food image placeholder'} /></article>)}</div></section>)}
+        <div className="menu-order-callout"><div><div className="eyebrow">READY WHEN YOU ARE</div><h3 className="serif">A lovely meal is just a sign-in away.</h3></div><Link className="btn-primary" href="/login">Sign in to order <ArrowRight size={15} /></Link></div>
+      </section>
+      <style>{`.menu-page{min-height:100svh;background:#FDFBF7}.menu-header{height:78px;padding:0 max(22px,calc((100vw - 1120px)/2));display:grid;grid-template-columns:1fr auto 1fr;align-items:center;border-bottom:1px solid #E7DCCB}.menu-back,.menu-signin{display:flex;align-items:center;gap:7px;color:#7B1E2B;font-size:11px;font-weight:700}.menu-signin{justify-self:end}.menu-hero{background:#F1E6D4}.menu-hero-art{min-height:300px;display:flex;align-items:end;background:linear-gradient(90deg,#3A2E25,#79634B);background-size:cover;background-position:center;color:#fff;padding:45px max(22px,calc((100vw - 1120px)/2))}.menu-hero-copy{max-width:680px}.menu-verified{display:flex;align-items:center;gap:6px;color:#F1D6A5;font-size:9px;letter-spacing:.15em;font-weight:700}.menu-hero h1{font-size:clamp(40px,5vw,61px);font-weight:400;margin:14px 0}.menu-hero-copy>p{font-size:13px;line-height:1.8;color:#F2E7D7;max-width:550px}.menu-hero-meta{display:flex;gap:15px;flex-wrap:wrap;font-size:10px;color:#F1E6D4;margin-top:18px}.menu-hero-meta span{display:flex;align-items:center;gap:5px}.menu-content{width:min(1000px,calc(100% - 40px));margin:0 auto;padding:55px 0 80px}.menu-section-title{text-align:center;margin-bottom:37px}.menu-section-title h2{font-size:42px;font-weight:400;margin:12px 0}.menu-section-title p{font-size:12px;color:#796F65;line-height:1.8}.menu-category{margin:34px 0}.menu-category>h3{font-size:27px;font-weight:400;padding-bottom:13px;border-bottom:1px solid #E7DCCB}.menu-items{display:grid;grid-template-columns:1fr 1fr;gap:15px}.menu-item{display:flex;justify-content:space-between;gap:14px;padding:17px;background:#FFFDFA;border:1px solid #E7DCCB;min-width:0}.menu-item-copy{min-width:0;flex:1}.menu-featured{font-size:8px;color:#A87A31;letter-spacing:.12em;font-weight:700}.menu-item h4{font:400 18px Georgia,serif;margin:5px 0 8px;color:#3A2E25}.menu-item p{font-size:10px;line-height:1.7;color:#87796C;margin:0 0 10px}.menu-item-bottom{display:flex;gap:9px;align-items:center;flex-wrap:wrap;color:#796F65;font-size:9px;margin-bottom:12px}.menu-veg{display:flex;align-items:center;gap:4px;color:#4F7A5B}.menu-item-copy>strong{font-size:12px;color:#7B1E2B}.menu-item-image{width:93px;min-width:93px;height:98px;background:linear-gradient(135deg,#F1E6D4,#E0C8A7);background-size:cover;background-position:center;border-radius:2px;align-self:flex-start}.menu-empty{text-align:center;padding:35px 20px;background:#F7EFE3;border:1px solid #E7DCCB;color:#796F65;font-size:12px;line-height:1.8}.menu-order-callout{margin-top:45px;padding:25px;background:#F1E6D4;border:1px solid #E3D2B6;display:flex;align-items:center;justify-content:space-between;gap:20px}.menu-order-callout h3{font-size:25px;font-weight:400;margin:9px 0 0}.menu-order-callout .btn-primary{white-space:nowrap}@media(max-width:700px){.menu-header{padding:0 14px;grid-template-columns:1fr auto}.menu-header>.wordmark{display:none}.menu-hero-art{min-height:270px;padding:30px 20px}.menu-content{padding:37px 0}.menu-items{grid-template-columns:1fr}.menu-section-title h2{font-size:36px}.menu-order-callout{align-items:flex-start;flex-direction:column}.menu-order-callout h3{font-size:23px}}`}</style>
+    </main>
+  )
+}

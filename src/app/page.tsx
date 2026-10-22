@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { ArrowDown, ArrowRight, ArrowUpRight, Clock3, Leaf, MapPin, Search, ShieldCheck, Sparkles, UtensilsCrossed } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 type Restaurant = {
   id: string
   name: string
