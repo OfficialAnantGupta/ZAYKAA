@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { ArrowLeft, ArrowRight, MapPin, ShieldCheck } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 type Restaurant = { id: string; name: string; slug: string; description: string | null; city: string | null; cuisines: string[] | null; min_order_value_paise: number | null; delivery_time_min_minutes: number | null; delivery_time_max_minutes: number | null }
 
 export default async function DiscoverPage() {
