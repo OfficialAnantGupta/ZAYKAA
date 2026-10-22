@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { ArrowRight, ClipboardList, UtensilsCrossed } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 function money(paise: number) {
   return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(paise / 100)
 }
