@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, KeyRound, UtensilsCrossed } from 'lucide-react'
 
 export default function RestaurantLoginPage() {
@@ -10,7 +11,7 @@ export default function RestaurantLoginPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setBusy(true)
     setError('')
