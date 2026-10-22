@@ -6,7 +6,8 @@ export async function GET(request: Request) {
   const code = url.searchParams.get('code')
   const next = url.searchParams.get('next') ?? '/auth/complete'
 
-  if (!next.startsWith('/') || next.startsWith('//')) {
+  // Only permit same-origin relative paths; backslashes can be interpreted as URL separators.
+  if (!next.startsWith('/') || next.startsWith('//') || next.includes('\\')) {
     return NextResponse.redirect(new URL('/login?error=invalid_redirect', url.origin))
   }
 
