@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import type { FormEvent } from 'react'
 import { ArrowLeft, ArrowRight, Chrome, ShieldCheck, UtensilsCrossed } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 
@@ -28,7 +29,7 @@ export default function LoginPage() {
     }
   }
 
-  async function signInAdmin(event: React.FormEvent<HTMLFormElement>) {
+  async function signInAdmin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setBusy(true)
     setError('')
