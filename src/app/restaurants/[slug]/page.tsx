@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, ArrowRight, Leaf, MapPin, ShieldCheck, UtensilsCrossed } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 type MenuItem = { id: string; name: string; description: string | null; category: string | null; price_paise: number; image_url: string | null; is_vegetarian: boolean | null; is_featured: boolean | null; dietary_status: string | null }
 
 export default async function RestaurantMenuPage({ params }: { params: Promise<{ slug: string }> }) {
