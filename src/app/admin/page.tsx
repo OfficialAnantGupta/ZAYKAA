@@ -3,6 +3,8 @@ import { redirect } from 'next/navigation'
 import { ArrowRight, ClipboardList, Store, WalletCards } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 
+export const dynamic = 'force-dynamic'
+
 export default async function AdminPage() {
   const supabase = await createClient()
   const { data: auth } = await supabase.auth.getUser()
